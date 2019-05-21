@@ -1,6 +1,6 @@
-#Bus seating optimisation problem
+# Bus seating optimisation problem
 
-##Context
+## Context
 A bus company is looking to improve the satifaction of them passengers. 
 For that propose, each passenger are asked if they belong to a group and if they wish a seat near a window.
 
@@ -31,7 +31,7 @@ The expected output is something like this:
 ```
 where each row represent a row in the bus and the last line shows the global satisfaction.
 
-##Some thoughts toward optimisation
+## Some thoughts toward optimisation
 
 It should be noted that a lone passenger not especially asking for a window will always be fully satisfied.
 
@@ -54,9 +54,9 @@ We hence attribute partial satisfaction for a group if:
 
 Case 2 will then be optimised by choosing to favor the window satisfaction or group satisfaction depending on the size of the group and the partial satisfaction values.
 
-##Algorithms
+## Algorithms
 
-###I Satisfaction score
+### I. Satisfaction score
 The global satisfaction score is the average satisfaction for all passengers.
 
 For each passenger the satisfaction is calculated as such:
@@ -73,32 +73,32 @@ where:
 - `score_near_seats` is 1 if the group share adjacent rows and adjacent seats in those rows, else 0
 - `satis_not_alone`, `satis_near_rows` and `satis_near_seats` are adjustable variables of partial satisfaction. By default 0.4, 0.2 and 0.2
 
-###II Place a group in a row
+### II. Place a group in a row
 We suppose the group is small enough to fit the seats remaining in a row.
 - if the group contains people wanting windows and windows are still available, place them near the window
 - place the rest of the group by increasing number of the seat
 
-###III Indivisible groups naive algorithm (not implemended)
+### III. Indivisible groups naive algorithm (not implemended)
 - convert the input in a list of groups
 - for each row, check if there is enough place for the group to be placed
 - if yes, apply algo II, if no, check next row
 - some groups may be left
 
-###IV Indivisible groups complementarity algorithm (not implemended)
+### IV. Indivisible groups complementarity algorithm (not implemended)
 - convert the input in a list of groups
 - for each row, check if the row is empty or if there is there is exactly enough place for the group to be placed
 - if yes, apply algo II, if no, check next row
 - if the group is still not placed, check all the rows again applying algo III
 - some groups may be left
 
-###V Complementary algorithm
+### V. Complementary algorithm
 - convert the input in a list of groups
 - split all the groups to big to fit a row into two subgroups, with the windows demands equally split in the two half groups
 - apply algo IV
 - if the group/subgroup is still not placed, split it again and apply algo IV
 - everyone is placed
 
-###VI Window first complementary algorithm
+### VI. Window first complementary algorithm
 - convert the input in a list of groups
 - split all the groups to big to fit a row into two subgroups, with the windows demands equally split in the two half groups
 - split all the groups containing more than 2 window demands
@@ -106,18 +106,18 @@ We suppose the group is small enough to fit the seats remaining in a row.
 - apply algo V
 - everyone is placed
 
-###VII Group first complementary algorithm
+### VII. Group first complementary algorithm
 - convert the input in a list of groups
 - sort the groups by size (primary sort key) and number of windows asked (secondary sort key)
 - split all the groups to big to fit a row into two subgroups, with the windows demands equally split in the two half groups (splitting at this stage increase the chance subgroups are in adjacent rows)
 - apply algo V
 - everyone is placed
 
-###VIII further algorithms...
+### VIII. further algorithms...
 Other algorithm splitting groups that ask for more than 2 windows and/or presenting different order of splitting/sorting could be implemented, favoring more or less window and group placements, or other additional optimisation parameters not defined here (corridor preference for example). 
 But we will stop here.
 
-##Use the code
+## Use the code
 Require python 3.6
 
 Check if automated tests run ok, including example one:
