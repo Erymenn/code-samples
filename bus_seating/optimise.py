@@ -15,8 +15,8 @@ args = parser.parse_args()
 
 if args.satis_not_alone + args.satis_near_rows + args.satis_near_seats > 1:
     raise ValueError("satis_not_alone + satis_near_rows + satis_near_seats must be <= 1")
-flight = code.Flight(args.input)
-flight.optimise(getattr(code, "optimise_"+args.algo),
+journey = code.Journey(args.input)
+journey.optimise(getattr(code, "optimise_"+args.algo),
                 file=args.output,
                 window_group_satis_ratio=args.window_group_satis_ratio,
                 satis_not_alone=args.satis_not_alone,

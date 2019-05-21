@@ -1,14 +1,41 @@
-#Code interview for Boxever
+#Bus seating optimisation problem
 
-##Conditions of success and optimisation margin
+##Context
+A bus company is looking to improve the satifaction of them passengers. 
+For that propose, each passenger are asked if they belong to a group and if they wish a seat near a window.
 
-The conditions of success are:
-- all the passenger wanting a seat near a window, have a seat near a window. (nothing specified=satisfied)
+For each bus journey, this information is delivered under this kind of format :
+```
+5 2
+1 2W 3 4W 
+5W 6
+10
+7W 8 9
+```
+- The first two numbers are the number of seats per row and the number of rows in the bus
+- Each other line represent a group of passengers
+- Passenger with a `W` near their number want to be near a window
+
+The conditions of satisfaction are:
+- all the passenger wanting a seat near a window, have a seat near a window (nothing specified=satisfied)
 - all the member of a group are on a same row.
+
+The bus company want to know the satisfation of the passengers in regard of their seats. 
+And if a 100% satifaction can't be reached, they want to maximise the satisfaction, optimisation process to be determined by the coder.
+
+The expected output is something like this:
+```
+2 1 3 10 4
+5 6 8 9 7
+100%
+```
+where each row represent a row in the bus and the last line shows the global satisfaction.
+
+##Some thoughts toward optimisation
 
 It should be noted that a lone passenger not especially asking for a window will always be fully satisfied.
 
-Cases were the conditions can't be reached
+Cases were the maximum satisfaction can't be reached
 1. more people asking for windows than number of windows (2 per row)
 2. more that 2 people asking for a window in a group
 3. group bigger than a row
@@ -16,7 +43,7 @@ Cases were the conditions can't be reached
 
 Case 1 can't be solved and case 4 will depend a lot of the placement algorithm. However we can discuss cases 2 and 3.
 
-For case 3, let's consider a group of 4 people in a plane of 12 rows and 3 seats per row. 
+For case 3, let's consider a group of 4 people in a bus of 12 rows (row 0 to 11) and 3 seats per row (seat A to C). 
 With the current conditions, the group tickets *0A 3C 7B 11A* and *5A 5B 6A 6B* would generate the same 0% satisfaction.
 However it seams reasonable to assume the group would be better satisfied by the 2nd configuration than by the 1rst, albeit not reaching a 100% satisfaction.
 
@@ -29,48 +56,66 @@ Case 2 will then be optimised by choosing to favor the window satisfaction or gr
 
 ##Algorithms
 
-###I Place a group in a row
+###I Satisfaction score
+The global satisfaction score is the average satisfaction for all passengers.
+
+For each passenger the satisfaction is calculated as such:
+```passenger_score = weight_of_window_satisfaction*window_score + weight_of_group_satisfaction*group_score```
+the ration of weight will be adjustable and default to 1
+
+The `window_score` is 0 if the passenger asked for the window and didn't get it and 1 in other cases
+
+For each group `group_score` is 1 if all the group is in a row, else it is calculated as such:
+```group_score = score_not_alone*satis_not_alone + score_near_rows*satis_near_rows + score_near_seats*satis_near_seats```
+where:
+- `score_not_alone` is 1 if no one is single out in a row, else 0
+- `score_near_rows` is 1 if the group share adjacent rows, else 0
+- `score_near_seats` is 1 if the group share adjacent rows and adjacent seats in those rows, else 0
+- `satis_not_alone`, `satis_near_rows` and `satis_near_seats` are adjustable variables of partial satisfaction. By default 0.4, 0.2 and 0.2
+
+###II Place a group in a row
 We suppose the group is small enough to fit the seats remaining in a row.
 - if the group contains people wanting windows and windows are still available, place them near the window
 - place the rest of the group by increasing number of the seat
 
-###II Indivisible groups naive algorithm (not implemended)
+###III Indivisible groups naive algorithm (not implemended)
 - convert the input in a list of groups
 - for each row, check if there is enough place for the group to be placed
-- if yes, apply algo I, if no, check next row
+- if yes, apply algo II, if no, check next row
 - some groups may be left
 
-###III Indivisible groups complementarity algorithm (not implemended)
+###IV Indivisible groups complementarity algorithm (not implemended)
 - convert the input in a list of groups
 - for each row, check if the row is empty or if there is there is exactly enough place for the group to be placed
-- if yes, apply algo I, if no, check next row
-- if the group is still not placed, check all the rows again applying algo II
+- if yes, apply algo II, if no, check next row
+- if the group is still not placed, check all the rows again applying algo III
 - some groups may be left
 
-###IV Complementary algorithm
+###V Complementary algorithm
 - convert the input in a list of groups
-- split all the groups to big to fit a row into two subgroups, with the windows demands equally split in the two half groups.
-- apply algo III
-- if the group/subgroup is still not placed, split it again and apply algo III
+- split all the groups to big to fit a row into two subgroups, with the windows demands equally split in the two half groups
+- apply algo IV
+- if the group/subgroup is still not placed, split it again and apply algo IV
 - everyone is placed
 
-###V Window first complementary algorithm
+###VI Window first complementary algorithm
 - convert the input in a list of groups
-- split all the groups to big to fit a row into two subgroups, with the windows demands equally split in the two half groups.
+- split all the groups to big to fit a row into two subgroups, with the windows demands equally split in the two half groups
 - split all the groups containing more than 2 window demands
 - sort the groups by number of windows asked (primary sort key) and size (secondary sort key)
-- apply algo IV
+- apply algo V
 - everyone is placed
 
-###VI Group first complementary algorithm
+###VII Group first complementary algorithm
 - convert the input in a list of groups
 - sort the groups by size (primary sort key) and number of windows asked (secondary sort key)
 - split all the groups to big to fit a row into two subgroups, with the windows demands equally split in the two half groups (splitting at this stage increase the chance subgroups are in adjacent rows)
-- apply algo IV
+- apply algo V
 - everyone is placed
 
-###VII further algorithms...
-Other algorithm splitting groups that ask for more than 2 windows and/or presenting different order of splitting/sorting could be implemented, favoring more or less window and group placements, or other additional optimisation parameters not defined here (corridor preference for example). But we will stop here.
+###VIII further algorithms...
+Other algorithm splitting groups that ask for more than 2 windows and/or presenting different order of splitting/sorting could be implemented, favoring more or less window and group placements, or other additional optimisation parameters not defined here (corridor preference for example). 
+But we will stop here.
 
 ##Use the code
 Require python 3.6

@@ -71,7 +71,7 @@ class Group:
         return ga, gb
 
 
-class Flight:
+class Journey:
     def __init__(self, input):
         # a raw input begin with a number, a file name with a letter
         try:
@@ -132,18 +132,18 @@ def list_halves(input):
     return input[:middle], input[middle:]
 
 
-def seat_group(flight, group, row, seats_left, w_left):
+def seat_group(journey, group, row, seats_left, w_left):
     # seat group, giving priority to windows
     # it's known there is enough space
     # if there is more window demands than windows availables, they are seated without window
     nb_w = len(group.windows)
     tmp_group = copy.copy(group.passengers)
-    index_w = 0 if seats_left == flight.nb_seats_row else -1
+    index_w = 0 if seats_left == journey.nb_seats_row else -1
     i = 0
     while index_w > -2 and i < len(group.windows) and w_left:
         p = group.windows[i]
-        flight.output[row][index_w] = p
-        seat = 0 if index_w == 0 else flight.nb_seats_row-1
+        journey.output[row][index_w] = p
+        seat = 0 if index_w == 0 else journey.nb_seats_row-1
         p.set_pos(row, seat)
         tmp_group.remove(p)
         i += 1
@@ -151,9 +151,9 @@ def seat_group(flight, group, row, seats_left, w_left):
         w_left -= 1
         seats_left -= 1
     if tmp_group:
-        compt = flight.output[row].index(None)
+        compt = journey.output[row].index(None)
         for p in tmp_group:
-            flight.output[row][compt] = p
+            journey.output[row][compt] = p
             p.set_pos(row, compt)
             compt += 1
             seats_left -= 1
@@ -171,31 +171,31 @@ def split_groups(groups, max_val, limit="passengers"):
     return res
 
 
-def optimise_simple(flight, groups=None):
+def optimise_simple(journey, groups=None):
     if groups is None:
-        groups = split_groups(flight.groups, flight.nb_seats_row)# ensure all the groups are smaller than a row
-    seats_left = [flight.nb_seats_row for j in range(flight.nb_rows)]
-    w_left = [2 for j in range(flight.nb_rows)]
+        groups = split_groups(journey.groups, journey.nb_seats_row)# ensure all the groups are smaller than a row
+    seats_left = [journey.nb_seats_row for j in range(journey.nb_rows)]
+    w_left = [2 for j in range(journey.nb_rows)]
 
     def group_loop(g):
         loop = True
         len_g = len(g)
         i = 0
-        while loop and i < flight.nb_rows:
-            if seats_left[i] == flight.nb_seats_row or (len_g == seats_left[i] and len(g.windows) <= w_left[i]):
-                seats_left[i], w_left[i] = seat_group(flight, g, i, seats_left[i], w_left[i])
+        while loop and i < journey.nb_rows:
+            if seats_left[i] == journey.nb_seats_row or (len_g == seats_left[i] and len(g.windows) <= w_left[i]):
+                seats_left[i], w_left[i] = seat_group(journey, g, i, seats_left[i], w_left[i])
                 loop = False
             i += 1
         i = 0
-        while loop and i < flight.nb_rows:
+        while loop and i < journey.nb_rows:
             if len_g <= seats_left[i] and len(g.windows) <= w_left[i]:
-                seats_left[i], w_left[i] = seat_group(flight, g, i, seats_left[i], w_left[i])
+                seats_left[i], w_left[i] = seat_group(journey, g, i, seats_left[i], w_left[i])
                 loop = False
             i += 1
         i = 0
-        while loop and i < flight.nb_rows:
+        while loop and i < journey.nb_rows:
             if len_g <= seats_left[i]:
-                seats_left[i], w_left[i] = seat_group(flight, g, i, seats_left[i], w_left[i])
+                seats_left[i], w_left[i] = seat_group(journey, g, i, seats_left[i], w_left[i])
                 loop = False
             i += 1
         if loop:
@@ -207,35 +207,35 @@ def optimise_simple(flight, groups=None):
         group_loop(g)
 
 
-def optimise_window_first(flight):
-    groups = copy.copy(flight.groups)
-    groups = split_groups(groups, flight.nb_seats_row, limit="passengers")
+def optimise_window_first(journey):
+    groups = copy.copy(journey.groups)
+    groups = split_groups(groups, journey.nb_seats_row, limit="passengers")
     groups = split_groups(groups, 2, limit="windows")
     groups.sort(key=lambda g:len(g), reverse=True)
     groups.sort(key=lambda g:len(g.windows), reverse=True)
-    optimise_simple(flight, groups)
+    optimise_simple(journey, groups)
 
-def optimise_group_first(flight):
-    groups = copy.copy(flight.groups)
+def optimise_group_first(journey):
+    groups = copy.copy(journey.groups)
     groups.sort(key=lambda g:len(g.windows), reverse=True)
     groups.sort(key=lambda g:len(g), reverse=True)
-    groups = split_groups(groups, flight.nb_seats_row, limit="passengers")
-    optimise_simple(flight, groups)
+    groups = split_groups(groups, journey.nb_seats_row, limit="passengers")
+    optimise_simple(journey, groups)
 
 
 
 if __name__ == "__main__":
     #check simple
-    assert Flight("3 2\n1 2W\n3W\n4 5 6").optimise(optimise_simple) == "2 1 3\n4 5 6\n100%"
+    assert Journey("3 2\n1 2W\n3W\n4 5 6").optimise(optimise_simple) == "2 1 3\n4 5 6\n100%"
     #check diff algo
-    assert Flight("4 2\n5\n6\n1 2W 3W 4W").optimise(optimise_simple) == "5 3 X 2\n6 1 X 4\n85%"
-    assert Flight("4 2\n5\n6\n1 2W 3W 4W").optimise(optimise_window_first) == "2 5 6 3\n4 1 X X\n86%"
-    assert Flight("4 2\n5\n6\n1 2W 3W 4W").optimise(optimise_group_first) == "2 1 4 3\n5 6 X X\n91%"
+    assert Journey("4 2\n5\n6\n1 2W 3W 4W").optimise(optimise_simple) == "5 3 X 2\n6 1 X 4\n85%"
+    assert Journey("4 2\n5\n6\n1 2W 3W 4W").optimise(optimise_window_first) == "2 5 6 3\n4 1 X X\n86%"
+    assert Journey("4 2\n5\n6\n1 2W 3W 4W").optimise(optimise_group_first) == "2 1 4 3\n5 6 X X\n91%"
     #check split
-    assert Flight("5 2\n1 2W 3W 4W 5W 6\n10\n7W 8 9").optimise(optimise_simple) == "2 1 10 9 3\n4 6 7 8 5\n80%"
-    assert Flight("5 2\n1 2W 3W 4W 5W 6\n10\n7W 8 9").optimise(optimise_window_first) == "2 1 7 8 3\n4 6 9 10 5\n80%"
-    assert Flight("5 2\n1 2W 3W 4W 5W 6\n10\n7W 8 9").optimise(optimise_group_first) == "2 1 7 8 3\n4 6 9 10 5\n80%"
+    assert Journey("5 2\n1 2W 3W 4W 5W 6\n10\n7W 8 9").optimise(optimise_simple) == "2 1 10 9 3\n4 6 7 8 5\n80%"
+    assert Journey("5 2\n1 2W 3W 4W 5W 6\n10\n7W 8 9").optimise(optimise_window_first) == "2 1 7 8 3\n4 6 9 10 5\n80%"
+    assert Journey("5 2\n1 2W 3W 4W 5W 6\n10\n7W 8 9").optimise(optimise_group_first) == "2 1 7 8 3\n4 6 9 10 5\n80%"
     #check example
-    assert Flight("example.txt").optimise(optimise_simple) == "1 2 3 8\n4 5 6 7\n11 9 10 12\n13 14 15 16\n100%"
+    assert Journey("example.txt").optimise(optimise_simple) == "2 1 3 10 4\n5 6 8 9 7\n100%"
 
 
